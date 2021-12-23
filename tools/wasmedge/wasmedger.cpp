@@ -63,6 +63,11 @@ int main(int Argc, const char *Argv[]) {
   PO::Option<PO::Toggle> ConfEnableAllStatistics(PO::Description(
       "Enable generating code for all statistics options include instruction counting, gas measuring, and execution time"sv));
 
+  PO::List<int> GasLim(
+      PO::Description(
+          "Limitation of execution gas. Upper bound can be specified as --gas-limit `GAS_LIMIT`."sv),
+      PO::MetaVar("GAS_LIMIT"sv));
+
   PO::List<int> MemLim(
       PO::Description(
           "Limitation of pages(as size of 64 KiB) in every memory instance. Upper bound can be specified as --memory-page-limit `PAGE_COUNT`."sv),
@@ -94,6 +99,7 @@ int main(int Argc, const char *Argv[]) {
            .add_option("disable-reference-types"sv, PropRefTypes)
            .add_option("disable-simd"sv, PropSIMD)
            .add_option("enable-all"sv, PropAll)
+           .add_option("gas-limit"sv, GasLim)
            .add_option("memory-page-limit"sv, MemLim)
            .add_option("allow-command"sv, AllowCmd)
            .add_option("allow-command-all"sv, AllowCmdAll)
@@ -130,6 +136,11 @@ int main(int Argc, const char *Argv[]) {
   /// Left for the future proposals.
   /// if (PropAll.value()) {
   /// }
+  if (GasLim.value().size() > 0) {
+    Conf.getStatisticsConfigure().setCostMeasuring(true);
+    Conf.getStatisticsConfigure().setCostLimit(
+        static_cast<uint32_t>(GasLim.value().back()));
+  }
   if (MemLim.value().size() > 0) {
     Conf.getRuntimeConfigure().setMaxMemoryPage(
         static_cast<uint32_t>(MemLim.value().back()));
